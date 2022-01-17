@@ -62,17 +62,20 @@ def purchasePlaces():
         return render_template('booking.html', club=club,
             competition=competition , 
             message='Please enter a valid number.')
-    elif placesRequired <= placesAvailable:
+    elif placesRequired <= placesAvailable and placesRequired <= 12:
         competition['numberOfPlaces'] = str(placesAvailable-placesRequired)
         saveCompetitions(competitions)
         flash('Great-booking complete!')
         return render_template('welcome.html',
             club=club, competitions=competitions)
-    elif int(placesRequired) > int(placesAvailable):
+    elif placesRequired > placesAvailable:
         return render_template('booking.html', club=club,
             competition=competition , 
             message='There is not enough places available.')
-
+    elif placesRequired > 12:
+        return render_template('booking.html', club=club,
+            competition=competition , 
+            message='Please book 12 or less places.')
 
 # TODO: Add route for points display
 

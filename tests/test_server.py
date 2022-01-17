@@ -157,3 +157,21 @@ def test_purchasePlaces_not_logged_in(client, mock_dbs, _logout):
     places_left = int(server.competitions[0]['numberOfPlaces'])
     assert places_left == places_available
     assert response.status_code == 404
+
+def test_purchasePlaces_more_than_12_places(client, mock_dbs, _logout):
+    """
+    Book more than 12 places.
+    Should return an error.
+    """
+    places_available = int(server.competitions[0]['numberOfPlaces'])
+    response = client.post('/purchasePlaces',
+        data={
+            'competition': 'Spring Festival',
+            'club': 'Simply Lift',
+            'places': '13'
+        })
+    places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert response.status_code == 200
+    assert places_left == places_available
+    assert 'Please book 12 or less places.' in response.data.decode()
+    assert request.url == 'http://localhost/purchasePlaces'

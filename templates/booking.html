@@ -10,6 +10,7 @@
         <p>{{message}}</p>
     {% endif %}
     Places available: {{competition['numberOfPlaces']}}
+    <p>You can book between 1 and 12 places.</p>
     <form action="/purchasePlaces" method="post">
         <input type="hidden" name="club" value="{{club['name']}}">
         <input type="hidden" name="competition" value="{{competition['name']}}">
