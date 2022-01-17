@@ -4,14 +4,19 @@ from flask import Flask,render_template,request,redirect,flash,url_for, abort
 
 def loadClubs():
     with open('clubs.json') as c:
-         listOfClubs = json.load(c)['clubs']
-         return listOfClubs
+        listOfClubs = json.load(c)['clubs']
+        return listOfClubs
 
 
 def loadCompetitions():
     with open('competitions.json') as comps:
-         listOfCompetitions = json.load(comps)['competitions']
-         return listOfCompetitions
+        listOfCompetitions = json.load(comps)['competitions']
+        return listOfCompetitions
+
+def saveCompetitions(competitions):
+    with open('competitions.json', 'w') as comps:
+        db = {'competitions': competitions}
+        json.dump(db, comps, indent=4)
 
 
 app = Flask(__name__)
@@ -31,7 +36,7 @@ def showSummary():
         return render_template('welcome.html', club=club,competitions=competitions)
     except IndexError:
         message = 'Your email doesn\'t exist.'
-        return render_template('index.html', message=message)
+        return render_template('email_unknown.html')
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
@@ -46,12 +51,27 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
-    competition = [c for c in competitions if c['name'] == request.form['competition']][0]
-    club = [c for c in clubs if c['name'] == request.form['club']][0]
+    try:
+        competition = [c for c in competitions if c['name'] == request.form['competition']][0]
+        club = [c for c in clubs if c['name'] == request.form['club']][0]
+    except Exception as e:
+        abort(404)
     placesRequired = int(request.form['places'])
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
-    flash('Great-booking complete!')
-    return render_template('welcome.html', club=club, competitions=competitions)
+    placesAvailable = int(competition['numberOfPlaces'])
+    if placesRequired <= 0:
+        return render_template('booking.html', club=club,
+            competition=competition , 
+            message='Please enter a valid number.')
+    elif placesRequired <= placesAvailable:
+        competition['numberOfPlaces'] = str(placesAvailable-placesRequired)
+        saveCompetitions(competitions)
+        flash('Great-booking complete!')
+        return render_template('welcome.html',
+            club=club, competitions=competitions)
+    elif int(placesRequired) > int(placesAvailable):
+        return render_template('booking.html', club=club,
+            competition=competition , 
+            message='There is not enough places available.')
 
 
 # TODO: Add route for points display
