@@ -1,6 +1,6 @@
 import json
 from flask import Flask,render_template,request,redirect,flash,url_for, abort
-
+from datetime import datetime
 
 def loadClubs():
     with open('clubs.json') as c:
@@ -29,39 +29,63 @@ clubs = loadClubs()
 def index():
     return render_template('index.html')
 
-@app.route('/showSummary',methods=['POST'])
+@app.route('/showSummary',methods=['GET', 'POST'])
 def showSummary():
+    now = datetime.now()
     try:
         club = [club for club in clubs if club['email'] == request.form['email']][0]
-        return render_template('welcome.html', club=club,competitions=competitions)
+        for compet in competitions:
+            if datetime.strptime(compet['date'], '%Y-%m-%d %H:%M:%S') <= now:
+                compet['numberOfPlaces'] = 0
+
+        return render_template('welcome.html',
+            club=club, competitions=competitions, now=now)
     except IndexError:
-        message = 'Your email doesn\'t exist.'
         return render_template('email_unknown.html')
+    except Exception as e:
+        print('ERROR summary :::::::', e)
+        abort(404)
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
-    foundClub = [c for c in clubs if c['name'] == club][0]
-    foundCompetition = [c for c in competitions if c['name'] == competition][0]
-    if foundClub and foundCompetition:
-        return render_template(
-            'booking.html',
-            club=foundClub,
-            competition=foundCompetition,
-            places_available=int(foundCompetition['numberOfPlaces']))
-    else:
-        flash("Something went wrong-please try again")
-        return render_template('welcome.html', club=club, competitions=competitions)
+    try:
+        foundClub = [c for c in clubs if c['name'] == club][0]
+        foundCompetition = [c for c in competitions if c['name'] == competition][0]
+        if foundClub and foundCompetition:
+            if foundCompetition['numberOfPlaces'] != 0:
+                return render_template(
+                    'booking.html',
+                    club=foundClub,
+                    competition=foundCompetition,
+                    places_available=int(foundCompetition['numberOfPlaces']))
+            else:
+                abort(404)
+        else:
+            flash("Something went wrong-please try again")
+            return render_template('welcome.html', club=club, competitions=competitions)
+    except Exception as e:
+        print('ERROR book :::::::', e)
+        abort(404)
 
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
+    now = datetime.now()
     try:
         competition = [c for c in competitions if c['name'] == request.form['competition']][0]
         club = [c for c in clubs if c['name'] == request.form['club']][0]
-    except Exception as e:
+    except:
         abort(404)
+        
+    if datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S') <= now:
+            print('\n\n\n BONJOUR\n\n\n')
+            abort(400)
+
     placesRequired = int(request.form['places'])
-    placesAvailable = int(competition['numberOfPlaces'])
+    try:
+        placesAvailable = int(competition['numberOfPlaces'])
+    except:
+        placesAvailable = 0
     if placesRequired <= 0:
         return render_template('booking.html', club=club,
             competition=competition , 

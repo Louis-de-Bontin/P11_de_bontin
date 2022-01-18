@@ -30,7 +30,7 @@ def db_clubs():
 def db_competitions():
     return [{
             "name": "Spring Festival",
-            "date": "2020-03-27 10:00:00",
+            "date": "2022-03-27 10:00:00",
             "numberOfPlaces": "25"
         },{
             "name": "Fall Classic",
@@ -91,7 +91,15 @@ def test_showSummary_should_redirect_to_same_page(client):
     assert '<p>Your email doesn\'t exist.</p>' in response.data.decode()
     assert request.url == 'http://localhost/showSummary'
 
-def test_purchasePlaces_correct_number(client, mock_dbs, _login):
+def test_showSummary_should_redirect_to_same_page(client, _logout):
+    """
+    Try to access showSummary view without connexion.
+    Should return 404.
+    """
+    response = client.get('/showSummary')
+    assert response.status_code == 404
+
+def test_purchasePlaces_correct_number_correct_date(client, mock_dbs, _login):
     """
     Book a corret amount of places, should return the same page.
     With the new number of places.
@@ -107,6 +115,22 @@ def test_purchasePlaces_correct_number(client, mock_dbs, _login):
     assert response.status_code == 200
     assert places_left == places_available-int(request.form['places'])
     assert request.url == 'http://localhost/purchasePlaces'
+
+def test_purchasePlaces_correct_number_wrong_date(client, mock_dbs, _login):
+    """
+    Book a corret amount of places, but the contest is past.
+    Should return 404.
+    """
+    places_available = int(server.competitions[0]['numberOfPlaces'])
+    response = client.post('/purchasePlaces',
+        data={
+            'competition': 'Fall Classic',
+            'club': 'Simply Lift',
+            'places': '4'
+        })
+    places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert response.status_code == 400
+    assert places_left == places_available
 
 def test_purchasePlaces_too_high_number(client, mock_dbs, _login):
     """
@@ -158,7 +182,7 @@ def test_purchasePlaces_not_logged_in(client, mock_dbs, _logout):
     assert places_left == places_available
     assert response.status_code == 404
 
-def test_purchasePlaces_more_than_12_places(client, mock_dbs, _logout):
+def test_purchasePlaces_more_than_12_places(client, mock_dbs):
     """
     Book more than 12 places.
     Should return an error.
@@ -175,3 +199,53 @@ def test_purchasePlaces_more_than_12_places(client, mock_dbs, _logout):
     assert places_left == places_available
     assert 'Please book 12 or less places.' in response.data.decode()
     assert request.url == 'http://localhost/purchasePlaces'
+
+def test_get_booking_page_past_contest(client):
+    """
+    Get the booking page for a past contest.
+    Should return 404.
+    """
+    response = client.get('/book/Fall%20Classic/Simply%20Lift')
+    assert response.status_code == 404
+
+def test_get_booking_page_futur_contest(client):
+    """
+    Get the booking page for a futur contest.
+    Should return 200 and the booking page.
+    """
+    response = client.get('/book/Spring%20Festival/Simply%20Lift')
+    assert response.status_code == 200
+    assert client.name == 'booking.html'
+
+def test_get_booking_page_futur_contest_not_loggin(client, _logout):
+    """
+    Get the booking page for a futur contest.
+    But the user isn't logged.
+    Should return 404.
+    """
+    response = client.get('/book/Spring%20Festival/')
+    assert response.status_code == 404
+
+def test_show_summary_doesnt_display_past_contest_links(_login):
+    """
+    Check that the booking links for past contests
+    are not displayed on the showSummary page.
+    """
+    assert _login.status_code == 200
+    assert '<a href="/book/Fall%20Classic/She%20Lifts">' not in _login.data.decode()
+
+def test_show_summary_display_futur_contest_links(_login):
+    """
+    Check that the booking links for futur contests
+    are displayed of the showSummary page.
+    """
+    assert _login.status_code == 200
+    assert '<a href="/book/Spring%20Festival/She%20Lifts">' in _login.data.decode()
+
+def test_show_summary_display_futur_contest_links_not_loggin(client, _logout):
+    """
+    Check that the booking links for futur contests
+    throws a 404 for a not logged user.
+    """
+    response = client.get('/showSummary')
+    assert response.status_code == 404
