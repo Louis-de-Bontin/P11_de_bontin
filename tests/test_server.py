@@ -15,7 +15,7 @@ def db_clubs():
     return [{
         "name":"Simply Lift",
         "email":"john@simplylift.co",
-        "points":"13"
+        "points":"8"
     },{
         "name":"Iron Temple",
         "email": "admin@irontemple.com",
@@ -59,7 +59,7 @@ def test_loadClubs_should_return_list_of_clubs(db_clubs):
     expected_value = [{
         "name":"Simply Lift",
         "email":"john@simplylift.co",
-        "points":"13"
+        "points":"8"
     },{
         "name":"Iron Temple",
         "email": "admin@irontemple.com",
@@ -79,7 +79,7 @@ def test_showSummary_should_redirect_to_welcome(client, _login):
     assert 'Welcome, ' in _login.data.decode()
     assert request.url == 'http://localhost/showSummary'
 
-def test_showSummary_should_redirect_to_same_page(client):
+def test_showSummary_should_redirect_to_email_not_found(client):
     """
     If the email doesn't exist, the user stays on the same
     page, but with an error message.
@@ -91,7 +91,7 @@ def test_showSummary_should_redirect_to_same_page(client):
     assert '<p>Your email doesn\'t exist.</p>' in response.data.decode()
     assert request.url == 'http://localhost/showSummary'
 
-def test_showSummary_should_redirect_to_same_page(client, _logout):
+def test_showSummary_get(client, _logout):
     """
     Try to access showSummary view without connexion.
     Should return 404.
@@ -99,7 +99,7 @@ def test_showSummary_should_redirect_to_same_page(client, _logout):
     response = client.get('/showSummary')
     assert response.status_code == 404
 
-def test_purchasePlaces_correct_number_correct_date(client, mock_dbs, _login):
+def test_purchasePlaces_correct_number_correct_date_enough_points(client, mock_dbs, _login):
     """
     Book a corret amount of places, should return the same page.
     With the new number of places.
@@ -112,8 +112,45 @@ def test_purchasePlaces_correct_number_correct_date(client, mock_dbs, _login):
             'places': '4'
         })
     places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '4'
     assert response.status_code == 200
     assert places_left == places_available-int(request.form['places'])
+    assert request.url == 'http://localhost/purchasePlaces'
+
+def test_purchasePlaces_not_integer_date_enough_points(client, mock_dbs, _login):
+    """
+    Book a corret amount of places, should return the same page.
+    With the new number of places.
+    """
+    places_available = int(server.competitions[0]['numberOfPlaces'])
+    response = client.post('/purchasePlaces',
+        data={
+            'competition': 'Spring Festival',
+            'club': 'Simply Lift',
+            'places': 'g'
+        })
+    places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '8'
+    assert response.status_code == 400
+    assert places_left == places_available
+    assert request.url == 'http://localhost/purchasePlaces'
+
+def test_purchasePlaces_correct_number_correct_date_not_enough_points(client, mock_dbs, _login):
+    """
+    Book a corret amount of places, should return the same page.
+    With the new number of places.
+    """
+    places_available = int(server.competitions[0]['numberOfPlaces'])
+    response = client.post('/purchasePlaces',
+        data={
+            'competition': 'Spring Festival',
+            'club': 'Simply Lift',
+            'places': '9'
+        })
+    places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '8'
+    assert response.status_code == 200
+    assert places_left == places_available
     assert request.url == 'http://localhost/purchasePlaces'
 
 def test_purchasePlaces_correct_number_wrong_date(client, mock_dbs, _login):
@@ -129,6 +166,7 @@ def test_purchasePlaces_correct_number_wrong_date(client, mock_dbs, _login):
             'places': '4'
         })
     places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '8'
     assert response.status_code == 400
     assert places_left == places_available
 
@@ -145,6 +183,7 @@ def test_purchasePlaces_too_high_number(client, mock_dbs, _login):
             'places': '100'
         })
     places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '8'
     assert response.status_code == 200
     assert places_left == places_available
     assert 'There is not enough places available.' in response.data.decode()
@@ -163,6 +202,7 @@ def test_purchasePlaces_negative_or_0_number(client, mock_dbs, _login):
             'places': '-10'
         })
     places_left = int(server.competitions[0]['numberOfPlaces'])
+    assert server.clubs[0]['points'] == '8'
     assert response.status_code == 200
     assert places_left == places_available
     assert 'Please enter a valid number.' in response.data.decode()
@@ -215,7 +255,6 @@ def test_get_booking_page_futur_contest(client):
     """
     response = client.get('/book/Spring%20Festival/Simply%20Lift')
     assert response.status_code == 200
-    assert client.name == 'booking.html'
 
 def test_get_booking_page_futur_contest_not_loggin(client, _logout):
     """

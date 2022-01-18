@@ -21,7 +21,7 @@
         {% for comp in competitions%}
         <li>
             {{comp['name']}}
-            {% if comp['numberOfPlaces'] == 0 %}
+            {% if comp['numberOfPlaces'] == 0 or comp['numberOfPlaces'] == '0' %}
                 - Competition is over or full<br />
             {% else %}
                 {%if comp['numberOfPlaces']|int >0%}

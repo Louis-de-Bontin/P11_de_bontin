@@ -18,6 +18,11 @@ def saveCompetitions(competitions):
         db = {'competitions': competitions}
         json.dump(db, comps, indent=4)
 
+def saveClubs(clubs):
+    with open('clubs.json', 'w') as clubs_db:
+        db = {'clubs': clubs}
+        json.dump(db, clubs_db, indent=4)
+
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
@@ -52,7 +57,7 @@ def book(competition,club):
         foundClub = [c for c in clubs if c['name'] == club][0]
         foundCompetition = [c for c in competitions if c['name'] == competition][0]
         if foundClub and foundCompetition:
-            if foundCompetition['numberOfPlaces'] != 0:
+            if foundCompetition['numberOfPlaces'] != 0 and foundCompetition['numberOfPlaces'] != '0':
                 return render_template(
                     'booking.html',
                     club=foundClub,
@@ -78,22 +83,30 @@ def purchasePlaces():
         abort(404)
         
     if datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S') <= now:
-            print('\n\n\n BONJOUR\n\n\n')
             abort(400)
 
-    placesRequired = int(request.form['places'])
+    try:
+        placesRequired = int(request.form['places'])
+    except:
+        abort(400)
+        
+    clubPoints = int(club['points'])
+
     try:
         placesAvailable = int(competition['numberOfPlaces'])
     except:
         placesAvailable = 0
+
     if placesRequired <= 0:
         return render_template('booking.html', club=club,
             competition=competition , 
             message='Please enter a valid number.',
             places_available=placesAvailable)
-    elif placesRequired <= placesAvailable and placesRequired <= 12:
+    elif placesRequired <= placesAvailable and placesRequired <= 12 and clubPoints >= placesRequired:
+        club['points'] = str(clubPoints-placesRequired)
         competition['numberOfPlaces'] = str(placesAvailable-placesRequired)
         saveCompetitions(competitions)
+        saveClubs(clubs)
         flash('Great-booking complete!')
         return render_template('welcome.html',
             club=club, competitions=competitions)
@@ -107,9 +120,13 @@ def purchasePlaces():
             competition=competition , 
             message='Please book 12 or less places.',
             places_available=placesAvailable)
+    elif clubPoints < placesRequired:
+        return render_template('booking.html', club=club,
+            competition=competition , 
+            message='You don\'t have enough points',
+            places_available=placesAvailable)
 
 # TODO: Add route for points display
-
 
 @app.route('/logout')
 def logout():
