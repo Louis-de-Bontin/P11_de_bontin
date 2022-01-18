@@ -43,7 +43,7 @@ def showSummary():
             if datetime.strptime(compet['date'], '%Y-%m-%d %H:%M:%S') <= now:
                 compet['numberOfPlaces'] = 0
 
-        return render_template('welcome.html',
+        return render_template('welcome.html', clubs=clubs,
             club=club, competitions=competitions, now=now)
     except IndexError:
         return render_template('email_unknown.html')

@@ -265,11 +265,13 @@ def test_get_booking_page_futur_contest_not_loggin(client, _logout):
     response = client.get('/book/Spring%20Festival/')
     assert response.status_code == 404
 
+
 def test_show_summary_doesnt_display_past_contest_links(_login):
     """
     Check that the booking links for past contests
     are not displayed on the showSummary page.
     """
+    assert '<p>Simply Lift - Points available : 8</p>' in _login.data.decode()
     assert _login.status_code == 200
     assert '<a href="/book/Fall%20Classic/She%20Lifts">' not in _login.data.decode()
 
@@ -278,6 +280,7 @@ def test_show_summary_display_futur_contest_links(_login):
     Check that the booking links for futur contests
     are displayed of the showSummary page.
     """
+    assert '<p>Simply Lift - Points available : 8</p>' in _login.data.decode()
     assert _login.status_code == 200
     assert '<a href="/book/Spring%20Festival/She%20Lifts">' in _login.data.decode()
 
