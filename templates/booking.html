@@ -9,8 +9,14 @@
     {% if message %}
         <p>{{message}}</p>
     {% endif %}
+
     Places available: {{competition['numberOfPlaces']}}
-    <p>You can book between 1 and 12 places.</p>
+    {% if places_available > 12 %}
+        <p>You can book between 1 and 12 places.</p>
+    {% else %}
+        <p>You can book between 1 and {{ places_available }} places.</p>
+    {% endif %}
+
     <form action="/purchasePlaces" method="post">
         <input type="hidden" name="club" value="{{club['name']}}">
         <input type="hidden" name="competition" value="{{competition['name']}}">

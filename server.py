@@ -43,7 +43,11 @@ def book(competition,club):
     foundClub = [c for c in clubs if c['name'] == club][0]
     foundCompetition = [c for c in competitions if c['name'] == competition][0]
     if foundClub and foundCompetition:
-        return render_template('booking.html',club=foundClub,competition=foundCompetition)
+        return render_template(
+            'booking.html',
+            club=foundClub,
+            competition=foundCompetition,
+            places_available=int(foundCompetition['numberOfPlaces']))
     else:
         flash("Something went wrong-please try again")
         return render_template('welcome.html', club=club, competitions=competitions)
@@ -61,7 +65,8 @@ def purchasePlaces():
     if placesRequired <= 0:
         return render_template('booking.html', club=club,
             competition=competition , 
-            message='Please enter a valid number.')
+            message='Please enter a valid number.',
+            places_available=placesAvailable)
     elif placesRequired <= placesAvailable and placesRequired <= 12:
         competition['numberOfPlaces'] = str(placesAvailable-placesRequired)
         saveCompetitions(competitions)
@@ -71,11 +76,13 @@ def purchasePlaces():
     elif placesRequired > placesAvailable:
         return render_template('booking.html', club=club,
             competition=competition , 
-            message='There is not enough places available.')
+            message='There is not enough places available.',
+            places_available=placesAvailable)
     elif placesRequired > 12:
         return render_template('booking.html', club=club,
             competition=competition , 
-            message='Please book 12 or less places.')
+            message='Please book 12 or less places.',
+            places_available=placesAvailable)
 
 # TODO: Add route for points display
 
