@@ -291,3 +291,20 @@ def test_show_summary_display_futur_contest_links_not_loggin(client, _logout):
     """
     response = client.get('/showSummary')
     assert response.status_code == 404
+
+def test_view_board_get(client):
+    """
+    Should return 200, and check the url, template and content.
+    """
+    response = client.get('/board')
+    assert response.status_code == 200
+    assert request.url == 'http://localhost/board'
+    print(response.data.decode())
+    assert '<p>Iron Temple - Points available : 4</p>' in response.data.decode()
+
+def test_view_board_post(client):
+    """
+    Should return 405.
+    """
+    response = client.post('/board')
+    assert response.status_code == 405
