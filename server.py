@@ -13,16 +13,15 @@ def loadCompetitions():
         listOfCompetitions = json.load(comps)['competitions']
         return listOfCompetitions
 
-def saveCompetitions(competitions):
-    with open('competitions.json', 'w') as comps:
-        db = {'competitions': competitions}
-        json.dump(db, comps, indent=4)
-
 def saveClubs(clubs):
     with open('clubs.json', 'w') as clubs_db:
         db = {'clubs': clubs}
         json.dump(db, clubs_db, indent=4)
 
+def saveCompetitions(competitions):
+    with open('competitions.json', 'w') as comps:
+        db = {'competitions': competitions}
+        json.dump(db, comps, indent=4)
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
@@ -60,18 +59,14 @@ def book(competition,club):
     try:
         foundClub = [c for c in clubs if c['name'] == club][0]
         foundCompetition = [c for c in competitions if c['name'] == competition][0]
-        if foundClub and foundCompetition:
-            if foundCompetition['numberOfPlaces'] != 0 and foundCompetition['numberOfPlaces'] != '0':
-                return render_template(
-                    'booking.html',
-                    club=foundClub,
-                    competition=foundCompetition,
-                    places_available=int(foundCompetition['numberOfPlaces']))
-            else:
-                abort(404)
+        if foundCompetition['numberOfPlaces'] != 0 and foundCompetition['numberOfPlaces'] != '0':
+            return render_template(
+                'booking.html',
+                club=foundClub,
+                competition=foundCompetition,
+                places_available=int(foundCompetition['numberOfPlaces']))
         else:
-            flash("Something went wrong-please try again")
-            return render_template('welcome.html', club=club, competitions=competitions)
+            abort(404)
     except Exception as e:
         print('ERROR book :::::::', e)
         abort(404)
@@ -113,7 +108,7 @@ def purchasePlaces():
         saveClubs(clubs)
         flash('Great-booking complete!')
         return render_template('welcome.html',
-            club=club, competitions=competitions)
+            club=club, clubs=clubs, competitions=competitions)
     elif placesRequired > placesAvailable:
         return render_template('booking.html', club=club,
             competition=competition , 
