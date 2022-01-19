@@ -2,11 +2,11 @@ import json
 from flask import Flask,render_template,request,redirect,flash,url_for, abort
 from datetime import datetime
 
+
 def loadClubs():
     with open('clubs.json') as c:
         listOfClubs = json.load(c)['clubs']
         return listOfClubs
-
 
 def loadCompetitions():
     with open('competitions.json') as comps:
@@ -101,8 +101,8 @@ def purchasePlaces():
             competition=competition , 
             message='Please enter a valid number.',
             places_available=placesAvailable)
-    elif placesRequired <= placesAvailable and placesRequired <= 12 and clubPoints >= placesRequired:
-        club['points'] = str(clubPoints-placesRequired)
+    elif placesRequired <= placesAvailable and placesRequired <= 12 and clubPoints >= (placesRequired*3):
+        club['points'] = str(clubPoints-(placesRequired*3))
         competition['numberOfPlaces'] = str(placesAvailable-placesRequired)
         saveCompetitions(competitions)
         saveClubs(clubs)
@@ -119,7 +119,7 @@ def purchasePlaces():
             competition=competition , 
             message='Please book 12 or less places.',
             places_available=placesAvailable)
-    elif clubPoints < placesRequired:
+    elif clubPoints < placesRequired*3:
         return render_template('booking.html', club=club,
             competition=competition , 
             message='You don\'t have enough points',

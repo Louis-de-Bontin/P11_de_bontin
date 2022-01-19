@@ -27,7 +27,7 @@ def test_saveCompetition(client, mock_dbs):
         "numberOfPlaces": "40"
     }]
     server.saveCompetitions(server.competitions)
-    assert server.loadCompetitions() == expected_value
+    assert server.competitions == expected_value
 
 def test_saveClubs():
     """
@@ -41,7 +41,7 @@ def test_saveClubs():
     expected_value = [{
         "name":"Simply Lift",
         "email":"john@simplylift.co",
-        "points":"4"
+        "points":"5"
     },{
         "name":"Iron Temple",
         "email": "admin@irontemple.com",
@@ -56,7 +56,7 @@ def test_saveClubs():
         "points":"8"
     }]
     server.saveClubs(server.clubs)
-    assert server.loadClubs() == expected_value
+    assert server.clubs == expected_value
 
 def test_show_summary_doesnt_display_past_contest_links(_login):
     """

@@ -15,10 +15,10 @@ def test_purchasePlaces_correct_number_correct_date_enough_points(client, mock_d
         data={
             'competition': 'Spring Festival',
             'club': 'Simply Lift',
-            'places': '4'
+            'places': '1'
         })
     places_left = int(server.competitions[0]['numberOfPlaces'])
-    assert server.clubs[0]['points'] == '4'
+    assert server.clubs[0]['points'] == '5'
     assert response.status_code == 200
     assert places_left == places_available-int(request.form['places'])
     assert request.url == 'http://localhost/purchasePlaces'
