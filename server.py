@@ -33,10 +33,6 @@ clubs = loadClubs()
 def index():
     return render_template('index.html')
 
-@app.route('/board')
-def board():
-    return render_template('board.html', clubs=clubs)
-
 @app.route('/showSummary',methods=['GET', 'POST'])
 def showSummary():
     now = datetime.now()
@@ -125,7 +121,9 @@ def purchasePlaces():
             message='You don\'t have enough points',
             places_available=placesAvailable)
 
-# TODO: Add route for points display
+@app.route('/board')
+def board():
+    return render_template('board.html', clubs=clubs)
 
 @app.route('/logout')
 def logout():
